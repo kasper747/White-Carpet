@@ -14,10 +14,10 @@ module.exports = {
           //console.log('Rooms to consider',myRoom);
           let roomName = rooms[roomDirection];
           //Skip known rooms.
-          if (!(roomName in Memory.rooms)
+          if (!Memory.rooms[roomName]
               || Memory.rooms[roomName] === {}
-              || !Memory.rooms[roomName].hasOwnProperty('Sources')
-              || !Memory.rooms[roomName].hasOwnProperty('routs')) {
+              || !Memory.rooms[roomName].Sources
+              || !Memory.rooms[roomName].routs) {
             //console.log('>>Room we dont know:', roomName);
             RoomsToScout.push(roomName);
             // Is room available?
@@ -56,7 +56,7 @@ module.exports = {
           /*
           Calculation DISTANCE/FLAGS
            */
-          if (Memory.rooms[roomName].Sources[SourceID] < 2) {
+          if (Memory.rooms[roomName].Sources[SourceID] <= 2) {
             const flag = creep.pos.findClosestByPath(creep.room.find(FIND_FLAGS));
             const dist = util.getDistance(creep.pos, SourceID);
             if (flag && dist < shortDist) {
@@ -394,10 +394,10 @@ module.exports = {
         ) {
           //console.log(creep.name, creep.memory.MySource , Object.keys(Memory.rooms[creep.room.name]));
           util.AllocateRoomSource(creep);
-          if (!creep.memory.MySource){
+          if (!creep.memory.MySource) {
             this.SelectTargetRoom();
           }
-          if (!creep.memory.MySource){
+          if (!creep.memory.MySource) {
             console.log(creep.name, 'NO GOOD SOURCES');
           }
 
@@ -408,7 +408,7 @@ module.exports = {
 
         // try to harvest energy, if the source is not in range
         let x, y, room;
-        console.log(creep.memory.targetRoom,creep.memory.MySource);
+        console.log(creep.memory.targetRoom, creep.memory.MySource);
         [x, y, room] = Memory.Shard3Objects[creep.memory.MySource].posStr.split(',');
         let pos = new RoomPosition(x, y, room);
         let target = Game.getObjectById(creep.memory.MySource);

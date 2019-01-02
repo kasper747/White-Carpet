@@ -51,7 +51,7 @@ module.exports = {
     for (let roomName in Game.rooms) {
       // Can see the roomName?
       if (Game.rooms[roomName] === undefined) {
-        //The room is invisible
+        //The room is not invisible
         continue
       }
       //console.log('Mapping roomName:',roomName);
@@ -89,6 +89,92 @@ module.exports = {
    * @param creep
    * @param target
    */
+
+  /**
+   * Update Lines to Sources
+   * CRON
+   * @constructor
+   */
+  UpdateSources() {
+    let SourcesInUse = {};
+    /*
+    Creeps Memory
+    */
+    console.log('##### --- UpdateSources --- #####');
+    for (let creepName in Memory.creeps) {
+      let creep = Game.creeps[creepName];
+      if (creep.memory.MySource !== undefined) {
+        if (creep.memory.MySource in SourcesInUse) {
+          SourcesInUse[creep.memory.MySource] += 1;
+        } else {
+          SourcesInUse[creep.memory.MySource] = 1;
+        }
+      }
+    }
+
+    /*
+     Updating Room Source Memory
+    */
+    let Rooms = Memory.rooms;
+    for (let roomName in Rooms) {
+      //console.log('room', roomName);
+      /*
+      CLEAN UP
+       */
+      if (!roomName) {
+        delete Memory.rooms[roomName];
+        continue
+      }
+
+      for (let SourceName in Memory.rooms[roomName].Sources) {
+        /*
+        CLEAN UP
+       */
+        if (!SourceName) {
+          delete Memory.rooms[roomName].Sources[SourceName];
+          continue
+        }
+
+        if (Memory.rooms[roomName].hasOwnProperty('safe')
+            && !Memory.rooms[roomName].safe) {
+          //NOT SAFE
+          Memory.rooms[roomName].Sources[SourceName] = 999;
+        }
+        else {
+          let Spawn = Game.spawns[spawnName];
+          let dist = this.getDistance(SourceName, Spawn.id);
+          //console.log(roomName, SourceName, 'Distance to source:', dist);
+          if (typeof dist === "string") {
+            /*
+            Cant calculate the distance
+             */
+              Memory.rooms[roomName].Sources[SourceName] = 999;
+            if (dist === '0') {
+              //delete Memory.rooms[roomName];
+              continue
+            }
+          }
+          if (dist > 100) {
+            Memory.rooms[roomName].Sources[SourceName] = this.getDistance(SourceName, Spawn.id);
+          }
+        }
+
+
+        if (Memory.rooms[roomName].Sources[SourceName] > 99) {
+          //OTHER BLOCK.
+          continue
+        }
+        else if (SourceName in SourcesInUse) {
+          //USED SOURCES
+          Memory.rooms[roomName].Sources[SourceName] = SourcesInUse[SourceName];
+        } else {
+          //UNUSED SOURCES
+          Memory.rooms[roomName].Sources[SourceName] = 0;
+        }
+      }
+    }
+  },
+
 
   movingTo(creep, target) {
     var r;
@@ -421,8 +507,8 @@ module.exports = {
         let sourceObj = Game.getObjectById(SourceID);
         let energyLeft = sourceObj.energy;
         if (Memory.rooms[roomName].Sources[SourceID] >= 99
-            || Memory.rooms[roomName].Sources[SourceID]> maxSpots
-        || energyLeft <200) {
+            || Memory.rooms[roomName].Sources[SourceID] > maxSpots
+            || energyLeft < 200) {
 
           return null
         }

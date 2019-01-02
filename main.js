@@ -348,7 +348,7 @@ function UpdateSources() {
     /*
     CLEAN UP
      */
-    if (roomName === undefined || roomName === null) {
+    if (!roomName ) {
       delete Memory.rooms[roomName];
       continue
     }
@@ -357,8 +357,8 @@ function UpdateSources() {
       /*
       CLEAN UP
      */
-      if (SourceName === undefined || SourceName === null) {
-        delete Memory.rooms[roomName][SourceName];
+      if (!SourceName) {
+        delete Memory.rooms[roomName].Sources[SourceName];
         continue
       }
 
@@ -376,7 +376,7 @@ function UpdateSources() {
           Cant calculate the distance
            */
           if (dist === '0') {
-            delete Memory.rooms[roomName];
+            //delete Memory.rooms[roomName];
             continue
           }
         }
@@ -470,7 +470,7 @@ module.exports.loop = function () {
 
   //createExtensions(Game.spawns[spawnName])
   if (util.myCron(10)) {
-    UpdateSources();
+    util.UpdateSources();
     if (util.myCron(50)) {
       util.MapRooms();
       if (util.myCron(100)) {

@@ -27,7 +27,7 @@ module.exports = {
     //let safeRooms = ['W42N36'];
     if (true) {
       try {
-        if (creep.memory.target === undefined) {
+        if (creep.memory.target === undefined && creep.role === 'claimer') {
           let controlLevel = 6000;
           for (let rName in Game.rooms) {
             let control = Game.rooms[rName].controller;
@@ -54,9 +54,9 @@ module.exports = {
     if (creep.memory.role === 'scout') {
 
 
-      if (creep.memory.target === undefined) {
+      if (!creep.memory.target) {
         let scoutRooms = rolelongDistanceHarvester.GetRoomsToScout();
-        creep.memory.target = scoutRooms[Math.round(Math.random() * (scoutRooms.length - 1))];
+        creep.memory.target = scoutRooms[Math.round(Math.random() * (1 - scoutRooms.length))];
       }
       //console.log(creep.name, 'Rooms I scout:', creep.memory.target);
       //let scoutRoom = scoutRooms[Math.round(Math.random() * (1 - scoutRooms.length))];//Math.round(Math.random()*(1-scoutRooms.length));
@@ -72,34 +72,35 @@ module.exports = {
       /*
       withdrawal
        */
+      console.log('SCOUT >>>>>>', 'Creep room', creep.room.name, 'Target room', creep.memory.target);
       if (creep.memory.task === 'retreat') {
         util.goHome(creep);
         return
       }
+      else if (creep.memory.task === 'scout') {
+        if (creep.room.name !== creep.memory.target) {
+          creep.say('T:'+ creep.memory.target);
+          console.log('########### NOT at TARGET', creep.memory.target, rolelongDistanceHarvester.GetRoomsToScout());
+          // find exit to target room
+          let exits = creep.room.findExitTo(creep.memory.target);
+          let r = util.movingTo(creep,creep.pos.findClosestByRange(exits));
+          console.log('SCOUT Move:',r,'EXIT:',creep.pos.findClosestByRange(exits),exits);
+          return
+        }
+        else if (creep.room.name === creep.memory.target) {
+          util.MapRooms();
+          util.UpdateSources();
+          creep.memory.target = undefined;
+        }
 
-      console.log('SCOUT >>>>>>', 'Creep room', creep.room.name, 'Target room', creep.memory.target);
-      if (creep.room.name !== creep.memory.target) {
-        console.log('########### NOT at TARGET', creep.memory.target);
-        // find exit to target room
-        let exits = creep.room.findExitTo(creep.memory.target);
-        let r = creep.moveTo(creep.pos.findClosestByRange(exits));
-        //console.log('Move ERR:',r,'EXIT:',creep.pos.findClosestByRange(exits));
-        return
+
+
       }
-      else if (creep.room.name === creep.memory.target) {
-        console.log('########### AT TARGET', creep.memory.target);
-        //Already scouted this room
-        creep.say('Brave New World!');
+      else if (!creep.memory.task){
+        creep.memory.task ='scout';
+      }
 
-        let pos = new RoomPosition(25, 25, creep.room.name);
-        util.MapRooms();
-        creep.memory.target = undefined;
-        creep.moveTo(pos);
-
-        creep.say('Going home!');
-        creep.memory.task = 'retreat';
-        return
-      } else {
+      else {
         console.log('########### NO TARGET', creep.memory.target);
         alert('!');
       }
