@@ -8,8 +8,6 @@ function BuroOfCartography(ShardName = 'shard3') {
 }
 
 
-
-
 BuroOfCartography.prototype.mapRoom = function (roomName) {
   this.mapRoomSources(roomName);
 };
@@ -42,98 +40,30 @@ BuroOfCartography.prototype.mapRoomSources = function (room) {
  * @returns {Array} accessPoses
  */
 BuroOfCartography.prototype.getAccessSpots = function (pos) {
-  console.log('getAccessSpots init', pos);
+  console.log('getAccessSpots init', pos, pos.roomName);
   const terrain = new Room.Terrain(pos.roomName);
   let accessPoses = [];
   let adjPos = pos.getAllAdjacentPositions();
   let i = 0;
-  while (i < 9) {
-    let nextPos = adjPos.next();
-    console.log('getAccessSpots:', i, nextPos.x, nextPos.y, JSON.stringify(nextPos));
-    console.log('getAccessSpots:', i, terrain.get(nextPos.x, nextPos.y));
+  while (i < 8) {
+    let nextPos = adjPos.next().value;
+    console.log('Position:', i, nextPos.x, nextPos.y, JSON.stringify(nextPos));
+    console.log('Terrain Type:', i, terrain.get(nextPos.x, nextPos.y));
     if (terrain.get(nextPos.x, nextPos.y) !== TERRAIN_MASK_WALL)
-      accessPoses.push(JSON.stringify(nextPos));
-    i++;
+      accessPoses.push(JSON.parse(JSON.stringify(nextPos)));
+    i = i + 1;
   }
   return accessPoses
 };
 
 
-function BuroOfProduction(commune) {
-  this.creeps = commune.creeps;
-  this.structures = commune.structures;
-  this.comName = commune.name;
-}
+function BuroOfHarvest(comName) {
+  this.shard = 'shard3';
+  this.com = comName;
+  this.sources = Memory.communes[this.com].sources;
 
-/**
- * Removes missing creeps  from normal memory
- * @constructor
- */
-
-BuroOfProduction.prototype.DefaulCleartDestroyCreeps = function () {
-  for (var name in Memory.creeps) {
-    if (!Game.creeps[name]) {
-      delete Memory.creeps[name];
-    }
-  }
-};
-
-
-/**
- * Remove missing creeps from the given Commune
- * @returns {Array}
- */
-BuroOfProduction.prototype.clearDestroyedCreeps = function () {
-  let removedCreeps = [];
-  this.DefaulCleartDestroyCreeps();
-  for (let creepID in this.creeps) {
-    if (!Game.getObjectById(creepID)) {
-      removedCreeps.push(creepID);
-      delete this.creeps[creepID];
-    }
-  }
-  return removedCreeps
-};
-
-
-/**
- * Adds new production facilities and also returns them.
- * @returns
- */
-BuroOfProduction.prototype.getProductionFacilities = function () {
-  let s = this.structures;
-  let r = [];
-  for (let id in s) {
-    const obj = Game.getObjectById(id);
-    if (obj && 'spawnCreep' in obj) {
-      r.push(obj);
-    }
-  }
-  return r
-};
-
-
-/**
- * Produces a creep for its commune
- * @param {Array} BodyParts
- * @returns {*}
- */
-
-BuroOfProduction.prototype.produceCreep = function (BodyParts) {
-  const spawns = this.getProductionFacilities();
-  let r;
-  let name = Game.time + Math.round(Math.random() * 100);
-  r = spawns[0].spawnCreep(BodyParts, name);
-  Memory.communes[this.comName].creeps[name] = {};
-  return r
-};
-
-
-function BuroOfHarvest(ShardName = 'shard3') {
-  this.shard = ShardName;
-  if (!Memory.map) Memory.map = {};
-  if (!Memory.map[this.shard]) Memory.map[this.shard] = {};
-  this.memory = Memory.map[this.shard];
+  if (!Memory.communes[this.com].jobs) Memory.communes[this.com].jobs = {};
+  this.tasks = Memory.communes[this.com].tasks;
 }
 
 
@@ -147,7 +77,35 @@ BuroOfHarvest.prototype.produceCreep = function (BodyParts) {
 };
 
 
-module.exports = [BuroOfCartography, BuroOfProduction, BuroOfHarvest];
+BuroOfHarvest.prototype.AssignePermaHarvest = function () {
+  let miningCreeps = _.filter(this.jobs, function (o) {
+    return o.task === 'mine' || o.task === 'harvest'
+  });
+  let freeCreeps = _.filter(this.jobs, function (o) {
+    return !o.task
+  });
+  for (let SourceId in this.sources) {
+    let source = this.sources[SourceId];
+    let CreepsAtSource = _.filter(miningCreeps, function (o) {
+      return o.target === SourceId
+    });
+    let workBaingDone = 0;
+    for (let creepId in CreepsAtSource) {
+      let creep = Game.getObjectById(creepId);
+      workBaingDone += creep.getActiveBodyparts(WORK) * 2;
+    }
+    if (workBaingDone < 10) {
+      freeCreeps[freeCreeps.length - 1].task = 'harvest';
+      freeCreeps[freeCreeps.length - 1].target = SourceId;
+      freeCreeps[freeCreeps.length - 1].storage = 'c673e1f26e7efd3';
+      freeCreeps.pop();
+    }
+    if (freeCreeps.length === 0) break;
+
+  }
+};
+
+module.exports = [BuroOfCartography, BuroOfHarvest];
 
 
 /**

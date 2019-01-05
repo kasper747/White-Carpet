@@ -1,108 +1,59 @@
 'use strict';
 
 
-let ex = require('BuroOfCartography');
+
+const roomName = "W3N7";let ex = require('BuroOfCartography');
 let BuroOfCartography = ex[0];
-let BuroOfProduction = ex[1];
-let BuroOfHarvest = ex[2];
+let BuroOfProduction = require('BuroOfProduction');
+let BuroOfHarvest = ex[1];
 let CommitteeOfAppropriation = require('Committis');
-
-function Mech(name, level, home, commune, memory, parts) {
-  this.name = name;
-  this.task = level;
-  this.home = home;
-  this.commune = commune;
-  this.memory = memory;
-  this.parts = parts;
-}
+let Commune = require('Commune');
 
 
-const STRUCTURES = 'structures';
-const ROOMS = 'rooms';
-const CREEPS = 'creeps';
-const SOURCES = 'sources';
-
-
-function Commune(name) {
-  this.name = name;
-
-  this[STRUCTURES] = Memory.communes[this.name][STRUCTURES];
-  this[ROOMS] = Memory.communes[this.name][ROOMS];
-  this[CREEPS] = Memory.communes[this.name][CREEPS];
-  this[SOURCES] = Memory.communes[this.name][SOURCES];
-
-}
-
-Commune.prototype.init = function () {
-  // Initialis Memory
-  if (!Memory.communes) Memory.communes = {};
-  if (!Memory.communes[this.name]) Memory.communes[this.name] = {};
-  this.memory = Memory.communes[this.name];
-  for (let i in this.assetTypes) {
-    console.log('Init', i, this.assetTypes[i]['idType']);
-    if (!Memory.communes[this.name][i])
-      Memory.communes[this.name][i] = {};
-    this[i] = Memory.communes[this.name][i];
-  }
-};
-
-
-try {
-
-} catch (e) {
-  console.log(e);
-}
 
 
 StructureSpawn.prototype.createCustomCreep =
     function () {
       // create a balanced body as big as possible with the given energy
-
-
       // create creep with the created body and the given role
       return this.createCreep([MOVE]);
     };
 Creep.prototype.kill = function () {
   // create a balanced body as big as possible with the given energy
-
-
   // create creep with the created body and the given role
   return this.suicide();
 };
 
 
-let pos = new RoomPosition(12, 21, 'W3N7');
 
 let committee = new CommitteeOfAppropriation();
 committee.focusOnCommune('r');
 let a = new Commune('r');
+a.init();
+
 committee.transferAssets(Game.spawns.Home.room.find(FIND_SOURCES));
 committee.transferAssets(Game.creeps);
-a.init();
-console.log(JSON.stringify(a.rooms));
-console.log(JSON.stringify(a.structures));
-
+committee.transferAssets(Game.spawns);
 let map = new BuroOfCartography();
-
 let r = map.mapRoom('W3N7');
-
 console.log(JSON.stringify(a.creeps));
-console.log('mapRoom', JSON.stringify(r));
-
-
 
 let CreepsBuro = new BuroOfProduction(a);
-console.log('Production Facilities',CreepsBuro.getProductionFacilities());
-console.log('CreepsBuro', CreepsBuro.comName);
+CreepsBuro.getProductionFacilities()
 r = CreepsBuro.clearDestroyedCreeps();
-console.log(JSON.stringify(r));
-r = CreepsBuro.produceCreep([MOVE,WORK,CARRY]);
-console.log('Production',JSON.stringify(r));
+r = CreepsBuro.produceCreep([MOVE, WORK, CARRY]);
+console.log('Production', JSON.stringify(r));
 
-//Game.spawns.Home.createCustomCreep();
+
+let HarvestBuro = new BuroOfHarvest('r');
 
 module.exports.loop = function () {
+
   //console.log('>>>>>>>>>>>>>> NEW TICK <<<<<<<<<<<<<');
+  HarvestBuro.AssignePermaHarvest();
+  CreepsBuro.produceCreep([MOVE, WORK, CARRY]);
+  
+
 
   let body_parts = [ //5 |250
     MOVE //350 //7
