@@ -148,7 +148,7 @@ module.exports = {
             /*
             Cant calculate the distance
              */
-              Memory.rooms[roomName].Sources[SourceName] = 999;
+            Memory.rooms[roomName].Sources[SourceName] = 999;
             if (dist === '0') {
               //delete Memory.rooms[roomName];
               continue
@@ -378,99 +378,99 @@ module.exports = {
    */
   getDistance(posOne, posTwo) {
 
-      if ('distance' in Memor.map === false) {
-        Memory.map.distance = {};
-      }
-      let nameOne, nameTwo;
-      let params = [posOne, posTwo];
-      let path, len;
-      let posObjects = [];
-      let posStrings = [];
-      //console.log('>>>>>>>>>>',pos, '>>>>>>>>>>',posTwo);
-      for (let i in params) {
+    if ('distance' in Memor.map === false) {
+      Memory.map.distance = {};
+    }
+    let nameOne, nameTwo;
+    let params = [posOne, posTwo];
+    let path, len;
+    let posObjects = [];
+    let posStrings = [];
+    //console.log('>>>>>>>>>>',pos, '>>>>>>>>>>',posTwo);
+    for (let i in params) {
 
-        let obj = params[i];
-        //console.log('Distance. Got this:', obj);
-        let posStr;
-        let posObj;
+      let obj = params[i];
+      //console.log('Distance. Got this:', obj);
+      let posStr;
+      let posObj;
+      /*
+      ID provided
+       */
+      if (typeof obj === 'string') {
         /*
-        ID provided
+        Getting from GAME
          */
-        if (typeof obj === 'string') {
-          /*
-          Getting from GAME
-           */
-          if (Game.getObjectById(obj)) {
-            obj = Game.getObjectById(obj);
-            let Object = obj;
-            let pos = Object.pos;
-            posStr = pos.x + ',' + pos.y + ',' + pos.roomName;
-            posObj = Object.pos;
-          }
-          /*
-          Getting from MEMORY
-           */
-          else if (Memory.map.shard3[obj]) {
-            posStr = Memory.map.shard3[obj].pos;
-            posObj = new RoomPosition(posStr.x, posStr.y, posStr.roomName);
-          }
-          else {
-            // ERROR
-            // THE ROOM NEED TO BE RESCOUTED
-            //console.log('The room needs rescouting', obj);
-            return i.toString();
-          }
-        }
-        /*
-        PosObject provided
-        */
-        else if (typeof obj === 'object') {
-          let pos = obj;
+        if (Game.getObjectById(obj)) {
+          obj = Game.getObjectById(obj);
+          let Object = obj;
+          let pos = Object.pos;
           posStr = pos.x + ',' + pos.y + ',' + pos.roomName;
-          posObj = obj;
-        }
-        //console.log('Params',i, posStr, '|', posObj);
-        posStrings.push(posStr);
-        posObjects.push(posObj);
-
-      }
-      nameOne = posStrings[0] + '|' + posStrings[1];
-      nameTwo = posStrings[1] + '|' + posStrings[0];
-      //console.log('Distance already calculated', nameOne, '|', nameTwo);
-      if (nameOne in Memory.map.distance) {
-        // DIST available
-        //console.log('Distance already calculated');
-        len = Memory.map.distance[nameOne];
-      }
-      else {
-        /*
-        Calculating distance
-        */
-        //console.log('Distance will be calculated');
-        let r = PathFinder.search(posObjects[0], {pos: posObjects[1], range: 2}, {
-          plainCost: 1,
-          swampCost: 1,
-          ignoreCreeps: true,
-          ignoreDestructibleStructures: true,
-          ignoreRoads: true,
-        });
-        if (r.incomplete === true) {
-          console.log('Path not calculated correctly');
-          return null
+          posObj = Object.pos;
         }
         /*
-        Saving in MEMORY
+        Getting from MEMORY
          */
-        console.log('#################costs', r.cost);
-        console.log('#################path', r.path.length);
-        len = r.path.length;
-        Memory.map.distance[nameOne] = len;
-        Memory.map.distance[nameTwo] = len;
-
+        else if (Memory.map.shard3[obj]) {
+          posStr = Memory.map.shard3[obj].pos;
+          posObj = new RoomPosition(posStr.x, posStr.y, posStr.roomName);
+        }
+        else {
+          // ERROR
+          // THE ROOM NEED TO BE RESCOUTED
+          //console.log('The room needs rescouting', obj);
+          return i.toString();
+        }
       }
+      /*
+      PosObject provided
+      */
+      else if (typeof obj === 'object') {
+        let pos = obj;
+        posStr = pos.x + ',' + pos.y + ',' + pos.roomName;
+        posObj = obj;
+      }
+      //console.log('Params',i, posStr, '|', posObj);
+      posStrings.push(posStr);
+      posObjects.push(posObj);
 
-      //console.log('Path length:', len);
-      return len
+    }
+    nameOne = posStrings[0] + '|' + posStrings[1];
+    nameTwo = posStrings[1] + '|' + posStrings[0];
+    //console.log('Distance already calculated', nameOne, '|', nameTwo);
+    if (nameOne in Memory.map.distance) {
+      // DIST available
+      //console.log('Distance already calculated');
+      len = Memory.map.distance[nameOne];
+    }
+    else {
+      /*
+      Calculating distance
+      */
+      //console.log('Distance will be calculated');
+      let r = PathFinder.search(posObjects[0], {pos: posObjects[1], range: 2}, {
+        plainCost: 1,
+        swampCost: 1,
+        ignoreCreeps: true,
+        ignoreDestructibleStructures: true,
+        ignoreRoads: true,
+      });
+      if (r.incomplete === true) {
+        console.log('Path not calculated correctly');
+        return null
+      }
+      /*
+      Saving in MEMORY
+       */
+      console.log('#################costs', r.cost);
+      console.log('#################path', r.path.length);
+      len = r.path.length;
+      Memory.map.distance[nameOne] = len;
+      Memory.map.distance[nameTwo] = len;
+
+    }
+
+    //console.log('Path length:', len);
+    return len
 
 
   },
@@ -555,7 +555,7 @@ module.exports = {
               }
         }
     ,
-    'builder':
+    'build':
         {
           'task':
               {
@@ -575,88 +575,18 @@ module.exports = {
   }
   ,
   BUILDER_GETS_E_FROM_SOURCE: false,
-  getTask(creep) {
-    let CreepType = creep.memory.role;
-    /**
-     * BASE BUILDER
-     */
-    if (creep.memory.role === 'basebuilder') {
-      let base = 'W43N38';
-      // Setting state to transfer
-      if (creep.memory.task === 'base' && creep.room.name === base) {
-        creep.memory.task = 'harvest';
-      }
-      else if (creep.memory.task !== 'transfer' && creep.carry.energy === creep.carryCapacity) {
-        creep.memory.task = 'transfer';
-        //Releasing the source
-        this.ReleaseRoomSource(creep);
-      }
-      //Setting state to harvest
-      else if (creep.carry.energy === 0 && creep.memory.task !== 'harvest') {
-        creep.memory.task = 'harvest';
-        //Grabing the source
-
-        creep.memory['MySource'] = this.AllocateRoomSource(creep);
-        console.log(creep.name, creep.memory['MySource']);
-      }
-      else if (creep.memory.task === undefined) {
-        creep.memory.task = 'transfer';
-      }
-    }
-    /**
-     * HARVESTER
-     */
-    else if (creep.memory.role === 'harvester') {
-      let base = 'W43N38';
-      // Setting state to transfer
-      if (creep.memory.task === 'base' && creep.room.name === base) {
-        creep.memory.task = 'harvest';
-      }
-      else if (creep.memory.task != 'transfer' && creep.carry.energy == creep.carryCapacity) {
-        if (creep.memory.home === 'W43N38') {
-          creep.memory.role = 'builder';
-        }
-        creep.memory.task = 'transfer';
-        //Releasing the source
-        this.ReleaseRoomSource(creep);
-      }
-      //Setting state to harvest
-      else if (creep.carry.energy == 0 && creep.memory.task != 'harvest') {
-        creep.memory.task = 'harvest';
-        //Grabing the source
-
-        creep.memory['MySource'] = this.AllocateRoomSource(creep);
-        console.log(creep.name, creep.memory['MySource']);
-      }
-      else if (creep.memory.task == undefined) {
-        creep.memory.task = 'transfer';
-      }
-    }
-    else if (creep.memory.role === 'lorry') {
-
+  getTask(creep, role = '') {
+    let CreepType = role;
+    if (CreepType === '') {
+      CreepType = creep.memory.role;
     }
     /**
      * BUILDER
      */
-    else if (creep.memory.role === 'builder') {
-      // Builder Initiation
-      if (creep.memory.task != 'harvest' && creep.carry.energy > 0) {
-        creep.memory.task = 'build';
-      }
-      // Switching to harvest
-      else if (creep.memory.task != 'harvest' && creep.carry.energy == 0) {
-        creep.memory.MoveBack = 0;
-        if (creep.memory.home === 'W43N38') {
-          creep.memory.role = 'harvester';
-        }
-        creep.memory.task = 'harvest';
+    else if (CreepType === 'builder') {
 
-      }
-      // Switching to build
-      else if (creep.memory.task != 'build' && creep.carry.energy == creep.carryCapacity) {
-        creep.memory.task = 'build';
-      }
     }
+    console.log('Talking:', CreepType, creep.memory.task);
     creep.say(this.CreepTalk[CreepType]['task'][creep.memory.task]);
   }
 }

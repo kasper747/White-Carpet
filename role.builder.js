@@ -2,7 +2,7 @@
 let WALL_HITS_START_REPAIR = 30000;
 let spawnName = 'Home';
 let CONSTRUCTION_PRIORITY = [
-    STRUCTURE_SPAWN,
+  STRUCTURE_SPAWN,
   STRUCTURE_EXTENSION,
   STRUCTURE_CONTAINER,
   STRUCTURE_TOWER,
@@ -186,13 +186,11 @@ let roleBuilder = {
                                    RepairRoadsAt = this.HITS_ROADS_START_REPAIR) {
         //console.log('>>>>>>>>>>>>',ObjectInRoom.id);
         // Selecting memory source
-        let routsTraffic;
-        // Legasy stuff
-        routsTraffic = Memory.rooms[ObjectInRoom.room.name].routs;
 
-        let targets;
+
+        let target;
         if (JobType === 'repair') {
-          targets = SpawnObject.room.find(FIND_STRUCTURES, {
+          target = SpawnObject.pos.findClosestByRange(FIND_STRUCTURES, {
             filter: (structure) => {
               return structure.structureType === STRUCTURE_ROAD
                   && structure.hits < RepairRoadsAt
@@ -200,19 +198,7 @@ let roleBuilder = {
             }
           });
         }
-
-        let pos;
-        //targets = [ObjectInRoom.findClosestByRange(s)];
-        targets = _.sortBy(targets, s => ObjectInRoom.pos.getRangeTo(s));
-        //let TrafficMap = util.getSortedDictAsArray(SpawnObject.memory.routs);
-        for (let index in targets) {
-          let target = targets[index];
-          pos = target.pos.x + ',' + target.pos.y;
-          if (routsTraffic[pos] > minTraffic) {
-            return target
-          }
-        }
-        return false
+        return target
       }
       ,
       GetContainerToRepair: function (ObjectInRoom) {
@@ -241,16 +227,17 @@ let roleBuilder = {
         Building
         */
         else {
+          let targets;
           // Container
           target = this.GetContainerToRepair(creep);
-          if (target != undefined) {
+          if (target) {
             //console.log('get container');
             workType = 'repair';
             return [target, workType]
           }
           // Repair Roads
           target = this.GetRoadToMaintain(creep);
-          if (target != false) {
+          if (target) {
             //console.log('get road');
             workType = 'repair';
             return [target, workType]
@@ -259,68 +246,78 @@ let roleBuilder = {
           for (let types in CONSTRUCTION_PRIORITY) {
             workType = 'build';
             //console.log('CONSTRUCTION_PRIORITY:', types);
-            targets = room.find(FIND_CONSTRUCTION_SITES, {
+            target = room.find(FIND_CONSTRUCTION_SITES, {
               filter: (structure) => {
                 return structure.structureType === CONSTRUCTION_PRIORITY[types]
               }
-            });
+            })[0];
             //console.log('Building','Type:',CONSTRUCTION_PRIORITY[types],'Count:',targets.length);
-            if (targets.length > 0) {
-              return [targets[0], workType];
+            if (target) {
+              return [target, workType];
             }
           }
 
           // Retreating for Waiting
 
-          targets = creep.room.find(FIND_STRUCTURES, {
+          target = creep.room.find(FIND_STRUCTURES, {
             filter: (structure) => {
               return structure.structureType === STRUCTURE_SPAWN
             }
-          });
+          })[0];
 
           workType = 'retreat';
-          target = targets[0];
 
         }
         return [target, workType]
       }
       ,
-      run: function (creep) {
-        let home = creep.memory.home;
-        if (creep.memory.role === 'interstate_road_builder') {
-          //this.BuildInterstateRoads(creep);
-          return
+      run: function (ComCreep) {
+        let creep = Game.creeps[ComCreep.name];
+        let allawedToGetEnergy = true;
+        // Builder Initiation
+
+        /**
+         * State Switching
+         */
+        if (creep.carry.energy === 0) {
+          creep.memory.task = 'harvest';
+
         }
-        util.getTask(creep);
+        // Switching to build
+        else if (creep.carry.energy > creep.carryCapacity / 2) {
+          creep.memory.task = 'build';
+        }
 
-
+        /**
+        Actualy Work
+         */
         let target, workType;
         [target, workType] = this.UpdateTarget(creep);
 
         if (creep.memory.task === 'build') {
           if (workType === 'repair') {
             if (creep.repair(target) === ERR_NOT_IN_RANGE) {
-              util.movingTo(creep, target);
+              creep.moveTo(target);
             }
           } else if (workType === 'build') {
             if (creep.build(target) === ERR_NOT_IN_RANGE) {
-              util.movingTo(creep, target);
+              creep.moveTo(target);
             }
           } else if (workType === 'retreat') {
-            util.movingTo(creep, target);
+            creep.moveTo(target);
 
           }
         }
         // Getting energy
         else if (creep.memory.task === 'harvest') {
           //Check if can pick up energy
-          if (Game.rooms[home].energyAvailable > 200 &&
-              Memory.NeedEnergyToProcreate === false) {
-            let targets = harvester.GetClosestEnergyPickUp(creep);
-            if (targets.length > 0) {
-              let r = creep.withdraw(targets[0], RESOURCE_ENERGY);
+
+          if (allawedToGetEnergy) {
+            let target = harvester.GetClosestEnergyPickUp(creep)[0];
+            if (target) {
+              let r = creep.withdraw(target, RESOURCE_ENERGY);
               if (r === ERR_NOT_IN_RANGE) {
-                util.movingTo(creep, targets[0]);
+                creep.moveTo(target);
               }
             }
           }
@@ -331,7 +328,7 @@ let roleBuilder = {
                 return structure.structureType === STRUCTURE_SPAWN
               }
             })[0];
-            util.movingTo(creep, source);
+            creep.moveTo(source);
           }
         }
 

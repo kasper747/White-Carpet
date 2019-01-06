@@ -5,6 +5,8 @@ const roomName = "W3N7";
 let BuroOfCartography = require('BuroOfCartography');
 let BuroOfProduction = require('BuroOfProduction');
 let BuroOfHarvest = require('BuroOfHarvest');
+let BuroOfConstruction = require('BuroOfConstruction');
+let BuroOfProgress = require('BuroOfProgress');
 let CommitteeOfAppropriation = require('Committis');
 let Commune = require('Commune');
 
@@ -23,8 +25,10 @@ Creep.prototype.kill = function () {
 
 
 let roleHarvester = require('role.harvester');
+let roleBuilder = require('role.builder');
 
 
+let ConstructionBuro = new BuroOfConstruction();
 let committee = new CommitteeOfAppropriation();
 committee.focusOnCommune('r');
 let commune = new Commune('r');
@@ -39,20 +43,32 @@ let CreepsBuro = new BuroOfProduction(commune);
 CreepsBuro.getProductionFacilities();
 
 
-
 let HarvestBuro = new BuroOfHarvest('r');
+let ProgressBuro = new BuroOfProgress('r');
 
 module.exports.loop = function () {
 
   console.log('>>>>>>>>>>>>>> NEW TICK <<<<<<<<<<<<<');
   committee.transferAssets(Game.spawns.Home.room.find(FIND_SOURCES));
+  committee.transferAssets(Game.spawns.Home.room.find(FIND_STRUCTURES, {
+    filter: (s) => {
+      return s.structureType === STRUCTURE_CONTROLLER
+    }
+  }));
   committee.transferAssets(Game.creeps);
   committee.transferAssets(Game.spawns);
+  committee.transferAssets(Game.rooms);
+
+
   r = CreepsBuro.clearDestroyedCreeps();
   //console.log('Removing Creeps:', JSON.stringify(r));
   HarvestBuro.AssignePermaHarvest();
-  console.log('Need more Creeps',HarvestBuro.needMoreCreeps);
-  if (HarvestBuro.needMoreCreeps)
+  ConstructionBuro.AssignJobs();
+  ProgressBuro.AssignJobs();
+
+
+  console.log('Need more Creeps', HarvestBuro.needMoreCreeps);
+  if (HarvestBuro.needMoreCreeps || ConstructionBuro.needMoreCreeps)
     CreepsBuro.produceCreep();
 
 
@@ -83,6 +99,9 @@ module.exports.loop = function () {
 
     if (creep.task === 'harvest') {
       roleHarvester.run(creep);
+    }
+    if (creep.task === 'build') {
+      roleBuilder.run(creep);
     }
     //
 

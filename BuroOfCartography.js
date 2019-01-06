@@ -9,7 +9,7 @@ function BuroOfCartography(ShardName = 'shard3') {
 
 
 BuroOfCartography.prototype.mapRoom = function (roomName) {
-  this.mapRoomSources(roomName);
+  this.mapRoomSourcesAndControllers(roomName);
 };
 
 
@@ -18,7 +18,7 @@ BuroOfCartography.prototype.mapRoom = function (roomName) {
  * @param {String} room
  * @returns {Array} SourcesAdded
  */
-BuroOfCartography.prototype.mapRoomSources = function (room) {
+BuroOfCartography.prototype.mapRoomSourcesAndControllers = function (room) {
   let SourcesAdded = [];
   // create a balanced body as big as possible with the given energy
   if (Game.rooms[room]) {
@@ -29,10 +29,15 @@ BuroOfCartography.prototype.mapRoomSources = function (room) {
       this.memory[s.id] = JSON.parse(JSON.stringify(s));
       this.memory[s.id]['access'] = this.getAccessSpots(s.pos);
     }
+    const controller = Game.rooms[room].controller;
+    SourcesAdded.push(controller.id);
+    this.memory[controller.id] = JSON.parse(JSON.stringify(controller));
+    this.memory[controller.id]['access'] = this.getAccessSpots(controller.pos);
   }
   // create creep with the created body and the given role
   return SourcesAdded
 };
+
 
 /**
  *
@@ -53,7 +58,6 @@ BuroOfCartography.prototype.getAccessSpots = function (pos) {
   }
   return accessPoses
 };
-
 
 
 /**
