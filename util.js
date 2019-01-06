@@ -378,9 +378,8 @@ module.exports = {
    */
   getDistance(posOne, posTwo) {
 
-    try {
-      if ('distance' in Memory === false) {
-        Memory.distance = {};
+      if ('distance' in Memor.map === false) {
+        Memory.map.distance = {};
       }
       let nameOne, nameTwo;
       let params = [posOne, posTwo];
@@ -411,11 +410,9 @@ module.exports = {
           /*
           Getting from MEMORY
            */
-          else if (Memory.Shard3Objects.obj) {
-            posStr = Memory.Shard3Objects[obj].posStr;
-            let x, y, rN;
-            [x, y, rN] = posStr.split(',');
-            posObj = new RoomPosition(x, y, rN);
+          else if (Memory.map.shard3[obj]) {
+            posStr = Memory.map.shard3[obj].pos;
+            posObj = new RoomPosition(posStr.x, posStr.y, posStr.roomName);
           }
           else {
             // ERROR
@@ -440,10 +437,10 @@ module.exports = {
       nameOne = posStrings[0] + '|' + posStrings[1];
       nameTwo = posStrings[1] + '|' + posStrings[0];
       //console.log('Distance already calculated', nameOne, '|', nameTwo);
-      if (nameOne in Memory.distance) {
+      if (nameOne in Memory.map.distance) {
         // DIST available
         //console.log('Distance already calculated');
-        len = Memory.distance[nameOne];
+        len = Memory.map.distance[nameOne];
       }
       else {
         /*
@@ -467,22 +464,14 @@ module.exports = {
         console.log('#################costs', r.cost);
         console.log('#################path', r.path.length);
         len = r.path.length;
-        Memory.distance[nameOne] = len;
-        Memory.distance[nameTwo] = len;
+        Memory.map.distance[nameOne] = len;
+        Memory.map.distance[nameTwo] = len;
 
       }
 
       //console.log('Path length:', len);
       return len
-    } catch (e) {
-      console.log('Distance >>>>>>>>>ERR', e,);
 
-      var err = getErrorObject();
-      var caller_line = err.stack.split("\n")[4];
-      var index = caller_line.indexOf("at ");
-      var clean = caller_line.slice(index + 2, caller_line.length);
-      console.log('Distance >>>>>>>>>ERR', e, clean, index, caller_line);
-    }
 
   },
 

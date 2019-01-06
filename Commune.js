@@ -24,6 +24,10 @@ function Commune(name) {
     'uniqueProp': 'ticksToRegeneration',
     'uniqueProp1': 'energy',
   };
+  this.creeps = {};
+  this.structures = {};
+  this.rooms = {};
+  this.sources = {};
   if (!Memory.communes) Memory.communes = {};
   if (!Memory.communes[this.name]) Memory.communes[this.name] = {};
   this[STRUCTURES] = Memory.communes[this.name][STRUCTURES];
@@ -45,3 +49,5 @@ Commune.prototype.init = function () {
     this[i] = Memory.communes[this.name][i];
   }
 };
+
+module.exports = Commune;

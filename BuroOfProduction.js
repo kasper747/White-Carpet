@@ -24,10 +24,10 @@ BuroOfProduction.prototype.DefaulCleartDestroyCreeps = function () {
 BuroOfProduction.prototype.clearDestroyedCreeps = function () {
   let removedCreeps = [];
   this.DefaulCleartDestroyCreeps();
-  for (let creepID in this.creeps) {
-    if (!Game.getObjectById(creepID)) {
-      removedCreeps.push(creepID);
-      delete this.creeps[creepID];
+  for (let creepName in this.creeps) {
+    if (!Game.creeps[creepName]) {
+      removedCreeps.push(creepName);
+      delete this.creeps[creepName];
     }
   }
   return removedCreeps
@@ -59,13 +59,24 @@ BuroOfProduction.prototype.getProductionFacilities = function () {
 BuroOfProduction.prototype.produceCreep = function (BodyParts) {
   const spawns = this.getProductionFacilities();
   let r;
-  let name = Game.time + Math.round(Math.random() * 100);
-  r = spawns[0].spawnCreep(BodyParts, name);
-  Memory.communes[this.comName].creeps[name] = {};
+  let name = 'Creep'+Game.time + Math.round(Math.random() * 100);
+  let productionFacility = spawns[0];
+  r = productionFacility.spawnCreep(BodyParts, name);
+  if (r === OK) {
+    Memory.communes[this.comName].creeps[name] = {
+      'manufactured': {
+        'productionDate': Game.time,
+        'productionFacility': productionFacility.name,
+        'productionPlace': JSON.parse(JSON.stringify(productionFacility.pos)),
+      },
+      'name': name,
+    };
+
+  }
   return r
 };
 
-BuroOfProduction.prototype.produceCreepByType = function (type,spawn) {
+BuroOfProduction.prototype.produceCreepByType = function (type, spawn) {
   const spawns = this.getProductionFacilities();
   let r;
   let name = Game.time + Math.round(Math.random() * 100);
@@ -75,7 +86,7 @@ BuroOfProduction.prototype.produceCreepByType = function (type,spawn) {
 };
 
 
-module.exports =  BuroOfProduction;
+module.exports = BuroOfProduction;
 
 
 

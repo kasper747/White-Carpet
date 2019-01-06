@@ -1,15 +1,12 @@
 'use strict';
 
 
-
-const roomName = "W3N7";let ex = require('BuroOfCartography');
-let BuroOfCartography = ex[0];
+const roomName = "W3N7";
+let BuroOfCartography = require('BuroOfCartography');
 let BuroOfProduction = require('BuroOfProduction');
-let BuroOfHarvest = ex[1];
+let BuroOfHarvest = require('BuroOfHarvest');
 let CommitteeOfAppropriation = require('Committis');
 let Commune = require('Commune');
-
-
 
 
 StructureSpawn.prototype.createCustomCreep =
@@ -25,22 +22,22 @@ Creep.prototype.kill = function () {
 };
 
 
+let roleHarvester = require('role.harvester');
+
 
 let committee = new CommitteeOfAppropriation();
 committee.focusOnCommune('r');
-let a = new Commune('r');
-a.init();
+let commune = new Commune('r');
+commune.init();
 
-committee.transferAssets(Game.spawns.Home.room.find(FIND_SOURCES));
-committee.transferAssets(Game.creeps);
-committee.transferAssets(Game.spawns);
+
 let map = new BuroOfCartography();
 let r = map.mapRoom('W3N7');
-console.log(JSON.stringify(a.creeps));
+console.log(JSON.stringify(commune.creeps));
 
-let CreepsBuro = new BuroOfProduction(a);
-CreepsBuro.getProductionFacilities()
-r = CreepsBuro.clearDestroyedCreeps();
+let CreepsBuro = new BuroOfProduction(commune);
+CreepsBuro.getProductionFacilities();
+
 r = CreepsBuro.produceCreep([MOVE, WORK, CARRY]);
 console.log('Production', JSON.stringify(r));
 
@@ -49,10 +46,15 @@ let HarvestBuro = new BuroOfHarvest('r');
 
 module.exports.loop = function () {
 
-  //console.log('>>>>>>>>>>>>>> NEW TICK <<<<<<<<<<<<<');
+  console.log('>>>>>>>>>>>>>> NEW TICK <<<<<<<<<<<<<');
+  committee.transferAssets(Game.spawns.Home.room.find(FIND_SOURCES));
+  committee.transferAssets(Game.creeps);
+  committee.transferAssets(Game.spawns);
+  r = CreepsBuro.clearDestroyedCreeps();
+  console.log('Removing Creeps:', JSON.stringify(r));
   HarvestBuro.AssignePermaHarvest();
-  CreepsBuro.produceCreep([MOVE, WORK, CARRY]);
-  
+  if (HarvestBuro.needMoreCreeps)
+    CreepsBuro.produceCreep([MOVE,  WORK, CARRY, MOVE,]);
 
 
   let body_parts = [ //5 |250
@@ -74,17 +76,13 @@ module.exports.loop = function () {
     }
   }
   */
-  for (let name in Game.creeps) {
+  for (let creepName in Game.creeps) {
+    let gameCreep = Game.creeps[creepName];
+    let creep =
+        Memory.communes.r.creeps[creepName];
+    //commune.creeps[creepName];
 
-    let creep = Game.creeps[name];
-
-    /*
-    if (creep.memory.MySource === undefined || creep.memory.MySource === 'undefined') {
-      delete creep.memory['MySource'];
-      delete creep.memory['task'];
-
-    }*/
-    if (creep.memory.role === 'harvester') {
+    if (creep.task === 'harvest') {
       roleHarvester.run(creep);
     }
     //

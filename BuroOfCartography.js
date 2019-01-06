@@ -47,8 +47,6 @@ BuroOfCartography.prototype.getAccessSpots = function (pos) {
   let i = 0;
   while (i < 8) {
     let nextPos = adjPos.next().value;
-    console.log('Position:', i, nextPos.x, nextPos.y, JSON.stringify(nextPos));
-    console.log('Terrain Type:', i, terrain.get(nextPos.x, nextPos.y));
     if (terrain.get(nextPos.x, nextPos.y) !== TERRAIN_MASK_WALL)
       accessPoses.push(JSON.parse(JSON.stringify(nextPos)));
     i = i + 1;
@@ -56,56 +54,6 @@ BuroOfCartography.prototype.getAccessSpots = function (pos) {
   return accessPoses
 };
 
-
-function BuroOfHarvest(comName) {
-  this.shard = 'shard3';
-  this.com = comName;
-  this.sources = Memory.communes[this.com].sources;
-
-  if (!Memory.communes[this.com].jobs) Memory.communes[this.com].jobs = {};
-  this.tasks = Memory.communes[this.com].tasks;
-}
-
-
-BuroOfHarvest.prototype.produceCreep = function (BodyParts) {
-  const spawns = this.getProductionFacilities();
-  let r;
-  let name = Game.time + Math.round(Math.random() * 100);
-  r = spawns[0].spawnCreep(BodyParts, name);
-  Memory.communes[this.comName].creeps[name] = {};
-  return r
-};
-
-
-BuroOfHarvest.prototype.AssignePermaHarvest = function () {
-  let miningCreeps = _.filter(this.jobs, function (o) {
-    return o.task === 'mine' || o.task === 'harvest'
-  });
-  let freeCreeps = _.filter(this.jobs, function (o) {
-    return !o.task
-  });
-  for (let SourceId in this.sources) {
-    let source = this.sources[SourceId];
-    let CreepsAtSource = _.filter(miningCreeps, function (o) {
-      return o.target === SourceId
-    });
-    let workBaingDone = 0;
-    for (let creepId in CreepsAtSource) {
-      let creep = Game.getObjectById(creepId);
-      workBaingDone += creep.getActiveBodyparts(WORK) * 2;
-    }
-    if (workBaingDone < 10) {
-      freeCreeps[freeCreeps.length - 1].task = 'harvest';
-      freeCreeps[freeCreeps.length - 1].target = SourceId;
-      freeCreeps[freeCreeps.length - 1].storage = 'c673e1f26e7efd3';
-      freeCreeps.pop();
-    }
-    if (freeCreeps.length === 0) break;
-
-  }
-};
-
-module.exports = [BuroOfCartography, BuroOfHarvest];
 
 
 /**
@@ -130,7 +78,6 @@ RoomPosition.prototype.getAdjacentPosition = function (direction) {
   if (direction > 8) {
     direction = RoomPosition.fixDirection(direction);
   }
-  console.log(new RoomPosition(this.x + adjacentPos[direction][0], this.y + adjacentPos[direction][1], this.roomName));
   return new RoomPosition(this.x + adjacentPos[direction][0], this.y + adjacentPos[direction][1], this.roomName);
 };
 
@@ -140,7 +87,6 @@ RoomPosition.prototype.getAdjacentPosition = function (direction) {
  */
 RoomPosition.prototype.getAllAdjacentPositions = function* () {
   for (let direction = 1; direction <= 8; direction++) {
-    console.log('getAllAdjacentPositions', this.getAdjacentPosition(direction));
 
     yield this.getAdjacentPosition(direction);
   }
@@ -155,3 +101,119 @@ RoomPosition.prototype.getAllAdjacentPositions = function* () {
 RoomPosition.fixDirection = function (direction) {
   return (((direction - 1) % 8) + 8) % 8 + 1;
 };
+
+
+/**
+ * A function to calculate distance between two positions on the map.
+ * @param ObjectID, PosObject or RoomObject
+ * @param ObjectID, PosObject or RoomObject
+ */
+
+
+/**
+ *
+ * @param {[RoomPosition,String]} posOne
+ * @param {[RoomPosition,String]} posTwo
+ * @param {String} shard
+ * @returns {Number} Dist
+ */
+BuroOfCartography.prototype.getDistance = function (posOne, posTwo, shard = 'shard3') {
+  if ('distance' in Memory.map === false) {
+    Memory.map.distance = {};
+  }
+  let nameOne, nameTwo;
+
+  let params = [posOne, posTwo];
+  let path, len;
+  let posObjects = [];
+  let posStrings = [];
+  //console.log('>>>>>>>>>>',pos, '>>>>>>>>>>',posTwo);
+  for (let i in params) {
+
+    let obj = params[i];
+    //console.log('Distance. Got this:', obj);
+    let posStr;
+    let posObj;
+    /*
+    ID provided
+     */
+    if (typeof obj === 'string') {
+      /*
+      Getting from GAME
+       */
+      if (Game.getObjectById(obj)) {
+        obj = Game.getObjectById(obj);
+        let Object = obj;
+        let pos = Object.pos;
+        posStr = pos.x + ',' + pos.y + ',' + pos.roomName;
+        posObj = Object.pos;
+      }
+      /*
+      Getting from MEMORY
+       */
+      else if (Memory.map[shard][obj]) {
+        posStr = Memory.map[shard][obj].pos;
+        posObj = new RoomPosition(posStr.x, posStr.y, posStr.roomName);
+      }
+      else {
+        // ERROR
+        // THE ROOM NEED TO BE RESCOUTED
+        //console.log('The room needs rescouting', obj);
+        return i.toString();
+      }
+    }
+    /*
+    PosObject provided
+    */
+    else if (typeof obj === 'object') {
+      let pos = obj;
+      posStr = pos.x + ',' + pos.y + ',' + pos.roomName;
+      posObj = obj;
+    }
+    //console.log('Params',i, posStr, '|', posObj);
+    posStrings.push(posStr);
+    posObjects.push(posObj);
+
+  }
+  nameOne = posStrings[0] + '|' + posStrings[1];
+  nameTwo = posStrings[1] + '|' + posStrings[0];
+  //console.log('Distance already calculated', nameOne, '|', nameTwo);
+  if (nameOne in Memory.map.distance) {
+    // DIST available
+    //console.log('Distance already calculated');
+    len = Memory.map.distance[nameOne];
+  }
+  else {
+    /*
+    Calculating distance
+    */
+    //console.log('Distance will be calculated');
+    let r = PathFinder.search(posObjects[0], {pos: posObjects[1], range: 2}, {
+      plainCost: 1,
+      swampCost: 1,
+      ignoreCreeps: true,
+      ignoreDestructibleStructures: true,
+      ignoreRoads: true,
+    });
+    if (r.incomplete === true) {
+      console.log('Path not calculated correctly');
+      return null
+    }
+    /*
+    Saving in MEMORY
+     */
+    console.log('#################costs', r.cost);
+    console.log('#################path', r.path.length);
+    len = r.path.length;
+    Memory.map.distance[nameOne] = len;
+    Memory.map.distance[nameTwo] = len;
+
+  }
+
+  //console.log('Path length:', len);
+  return len
+
+
+};
+
+module.exports = BuroOfCartography;

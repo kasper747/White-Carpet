@@ -35,7 +35,6 @@ function CommitteeOfAppropriation() {
 module.exports = CommitteeOfAppropriation;
 
 
-
 /**
  * Focus on the specific Commune
  * @param {String} comName {test2}
@@ -68,7 +67,6 @@ CommitteeOfAppropriation.prototype.transferAssets = function (assets, comName = 
     Defining the type
      */
     for (let assetName in this.assetTypes) {
-      console.log(assetName, this.assetTypes[assetName].uniqueProp, assets[idx].name, this.assetTypes[assetName].uniqueProp in assets[idx]);
       if (this.assetTypes[assetName].uniqueProp in assets[idx]
           && (!this.assetTypes[assetName].uniqueProp1
               || this.assetTypes[assetName].uniqueProp1 in assets[idx])
@@ -82,19 +80,23 @@ CommitteeOfAppropriation.prototype.transferAssets = function (assets, comName = 
     Removing it from other commmunes
      */
     if (!assetType || !idType) alert('!');
-    let data = {};
     let uniqueID = assets[idx][idType];
-    console.log('Transfer:', assets[idx], uniqueID, assetType);
+    let data = {};
+    data [idType] = uniqueID;
+
+
+
     if (Memory.communes[comName][assetType][uniqueID])
       continue;
+
     for (let com in Memory.communes) {
-      console.log('Transfer:', com, assets[idx], uniqueID, assetType);
       if (Memory.communes[com][assetType][uniqueID]) {
         data = Memory.communes[com][assetType][uniqueID];
         delete Memory.communes[com][assetType][uniqueID];
         break;
       }
     }
+    console.log('Transfer:', assets[idx], uniqueID, assetType,idType,JSON.stringify(data));
     Memory.communes[comName][assetType][uniqueID] = data;
   }
 
