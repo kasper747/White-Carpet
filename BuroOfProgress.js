@@ -41,7 +41,7 @@ BuroOfProgress.prototype.AssignJobs = function () {
     let creepsWorkingOnIt = this.getBurosCreeps(controllerID);
     console.log('Progress. ID:', controllerID);
     let controllerRoom = this.map[controllerID].pos.roomName;
-    console.log('BuroOfProgress Creeps working:', controllerID,creepsWorkingOnIt.length);
+    console.log('BuroOfProgress Creeps working:', controllerID, creepsWorkingOnIt.length, JSON.stringify(creepsWorkingOnIt));
     if (creepsWorkingOnIt.length > 0) {
       break;
     }

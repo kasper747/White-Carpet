@@ -533,7 +533,7 @@ module.exports = {
 
   ,
   CreepTalk: {
-    'upgrader':
+    'progress':
         {
           'task':
               {

@@ -56,8 +56,14 @@ BuroOfConstruction.prototype.AssignJobs = function () {
   this.needMoreCreeps = false;
   for (let room in roomWithJobs) {
     let creepsInThisRoom = this.getBurosCreeps(room);
+    let totalWork = 0;
+    for (let idx in  creepsInThisRoom) {
+      console.log('Creeps',JSON.stringify(creepsInThisRoom[idx]));
+      totalWork += Game.creeps[creepsInThisRoom[idx].name].getActiveBodyparts(WORK).length * 5;
+
+    }
     console.log('ConstructionBuro Creeps in Room:', room, creepsInThisRoom);
-    if (creepsInThisRoom.length > 0) {
+    if (roomWithJobs[room]/totalWork < 200) {
       console.log('Creeps working:', JSON.stringify(creepsInThisRoom));
       break;
     }
@@ -83,15 +89,67 @@ BuroOfConstruction.prototype.AssignJobs = function () {
 BuroOfConstruction.prototype.getJobs = function () {
   let freeCreeps = [];
   let roomsWithJobs = {};
+  let TotalEffort;
   for (let room in this.memory.rooms) {
     if (Game.rooms[room]) {
       const constSites = Game.rooms[room].find(FIND_MY_CONSTRUCTION_SITES);
       roomsWithJobs[room] = constSites.length;
+      TotalEffort = _.sum(constSites, 'progressTotal');
+      roomsWithJobs[room] = TotalEffort;
+
     }
 
   }
-  console.log('Rooms with Jobs:', JSON.stringify(roomsWithJobs));
+  console.log('Rooms with Jobs:', JSON.stringify(roomsWithJobs), TotalEffort);
   return roomsWithJobs
+};
+
+
+BuroOfConstruction.prototype.placeImportantRoads = function (pos1 = 'eee50774086309c', pos2 = 'c673e1f26e7efd3') {
+
+  let TargetStructures = _.filter(Memory.communes.r.structures, function (o) {
+    return Game.getObjectById(o.id)
+        && (Game.getObjectById(o.id).structureType === STRUCTURE_SPAWN
+            || Game.getObjectById(o.id).structureType === STRUCTURE_STORAGE);
+  });
+  console.log(JSON.stringify(TargetStructures));
+  let SourceStructures = _.filter(this.memory.sources);
+  console.log(JSON.stringify(SourceStructures));
+  const controllers = _.filter(Memory.communes.r.structures, function (o) {
+    return Game.getObjectById(o.id)
+        && (Game.getObjectById(o.id).structureType === STRUCTURE_CONTROLLER
+            || Game.getObjectById(o.id).structureType === STRUCTURE_TOWER);
+  });
+  SourceStructures = SourceStructures.concat(controllers);
+  console.log(JSON.stringify(controllers));
+  for (let targetID in TargetStructures) {
+    for (let sourceID in SourceStructures) {
+      let pos1 = TargetStructures[targetID].id;
+      let pos2 = SourceStructures[sourceID].id;
+      let Obj1 = Game.getObjectById(pos1);
+      let Obj2 = Game.getObjectById(pos2);
+      console.log('Target', pos1, 'Source', pos2);
+
+      if (!Obj1) Obj1 = Memory.map['shard3'][pos1];
+      let Pos1 = new RoomPosition(Number(Obj1.pos.x), Number(Obj1.pos.y), Obj1.pos.roomName);
+      if (!Obj2) Obj2 = Memory.map['shard3'][pos2];
+      let Pos2 = new RoomPosition(Number(Obj2.pos.x), Number(Obj2.pos.y), Obj2.pos.roomName);
+      let r = PathFinder.search(Pos1, {pos: Pos2, range: 1}, {
+        plainCost: 3,
+        swampCost: 3,
+        ignoreCreeps: true,
+        ignoreDestructibleStructures: false,
+        ignoreRoads: false,
+      });
+      let path = r.path;
+      for (let idx in path) {
+        path[idx].createConstructionSite(STRUCTURE_ROAD);
+        const visual = new RoomVisual(path[idx].roomName);
+        visual.text('O', path[idx].x, path[idx].y);
+      }
+    }
+  }
+
 };
 
 

@@ -11,12 +11,11 @@ let CommitteeOfAppropriation = require('Committis');
 let Commune = require('Commune');
 
 
-StructureSpawn.prototype.createCustomCreep =
-    function () {
-      // create a balanced body as big as possible with the given energy
-      // create creep with the created body and the given role
-      return this.createCreep([MOVE]);
-    };
+function myCron(numberT, numberD = 0) {
+  return (Game.time + numberD) / numberT == Math.round((Game.time + numberD) / numberT)
+}
+
+
 Creep.prototype.kill = function () {
   // create a balanced body as big as possible with the given energy
   // create creep with the created body and the given role
@@ -26,6 +25,7 @@ Creep.prototype.kill = function () {
 
 let roleHarvester = require('role.harvester');
 let roleBuilder = require('role.builder');
+let roleUpgrader = require('role.upgrader');
 
 
 let ConstructionBuro = new BuroOfConstruction();
@@ -49,48 +49,35 @@ let ProgressBuro = new BuroOfProgress('r');
 module.exports.loop = function () {
 
   console.log('>>>>>>>>>>>>>> NEW TICK <<<<<<<<<<<<<');
-  committee.transferAssets(Game.spawns.Home.room.find(FIND_SOURCES));
-  committee.transferAssets(Game.spawns.Home.room.find(FIND_STRUCTURES, {
-    filter: (s) => {
-      return s.structureType === STRUCTURE_CONTROLLER
-    }
-  }));
-  committee.transferAssets(Game.creeps);
-  committee.transferAssets(Game.spawns);
-  committee.transferAssets(Game.rooms);
+  if (myCron(100)) {
+    ConstructionBuro.placeImportantRoads();
 
+  }
+  if (myCron(20)) {
+    committee.transferAssets(Game.spawns.Home.room.find(FIND_SOURCES));
+    committee.transferAssets(Game.spawns.Home.room.find(FIND_STRUCTURES, {
+      filter: (s) => {
+        return s.structureType === STRUCTURE_CONTROLLER
+      }
+    }));
+    committee.transferAssets(Game.creeps);
+    committee.transferAssets(Game.spawns);
+    committee.transferAssets(Game.rooms);
+  }
+  if (myCron(5)) {
 
+    //console.log('Removing Creeps:', JSON.stringify(r));
+    HarvestBuro.AssignePermaHarvest();
+    ConstructionBuro.AssignJobs();
+    ProgressBuro.AssignJobs();
+  }
   r = CreepsBuro.clearDestroyedCreeps();
-  //console.log('Removing Creeps:', JSON.stringify(r));
-  HarvestBuro.AssignePermaHarvest();
-  ConstructionBuro.AssignJobs();
-  ProgressBuro.AssignJobs();
-
-
-  console.log('Need more Creeps', HarvestBuro.needMoreCreeps);
-  if (HarvestBuro.needMoreCreeps || ConstructionBuro.needMoreCreeps)
+  if (HarvestBuro.needMoreCreeps || ConstructionBuro.needMoreCreeps || ProgressBuro.needMoreCreeps)
     CreepsBuro.produceCreep();
 
 
-  let body_parts = [ //5 |250
-    MOVE //350 //7
-  ];
-
-  /*
-  for (let name = 0; name < creepsPriority.length; name += 1) {
-    let CreepRole = creepsPriority[name];
-
-    let CreepsOfType = _.filter(Game.creeps, (creep) =>
-        creep.memory.role === CreepRole
-        && creep.memory.home === 'W41N36'
-    );
 
 
-    if (true) {
-
-    }
-  }
-  */
   for (let creepName in Game.creeps) {
     let gameCreep = Game.creeps[creepName];
     let creep =
@@ -100,8 +87,11 @@ module.exports.loop = function () {
     if (creep.task === 'harvest') {
       roleHarvester.run(creep);
     }
-    if (creep.task === 'build') {
+    else if (creep.task === 'build') {
       roleBuilder.run(creep);
+    }
+    else if (creep.task === 'progress') {
+      roleUpgrader.run(creep);
     }
     //
 
