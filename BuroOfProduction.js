@@ -56,11 +56,13 @@ BuroOfProduction.prototype.getProductionFacilities = function () {
  * @param {Array} BodyParts
  * @returns {*}
  */
-BuroOfProduction.prototype.produceCreep = function (BodyParts) {
+BuroOfProduction.prototype.produceCreep = function (BodyParts = []) {
   const spawns = this.getProductionFacilities();
+  const productionFacility = spawns[0];
   let r;
-  let name = 'Creep'+Game.time + Math.round(Math.random() * 100);
-  let productionFacility = spawns[0];
+  let name = 'Creep' + Game.time + Math.round(Math.random() * 100);
+  if (BodyParts.length === 0)
+    BodyParts = this.getBody(spawns[0]);
   r = productionFacility.spawnCreep(BodyParts, name);
   if (r === OK) {
     Memory.communes[this.comName].creeps[name] = {
@@ -71,18 +73,48 @@ BuroOfProduction.prototype.produceCreep = function (BodyParts) {
       },
       'name': name,
     };
-
+    console.log('Final Design.', 'Name', name, 'Costs', this.designCosts(BodyParts), 'Body', JSON.stringify(BodyParts));
   }
+  if ([ERR_BUSY].includes(r)) {
+
+  } else console.log('Production:', r);
   return r
 };
+/**
+ * Calculates the costs of the Design
+ * @param {Array} designBody
+ * @returns {number}
+ */
+BuroOfProduction.prototype.designCosts = function (designBody) {
+  let costs = 0;
+  for (let idx in designBody) {
+    let b = designBody[idx];
+    costs += BODYPART_COST[b];
+  }
+  return costs
+};
 
-BuroOfProduction.prototype.produceCreepByType = function (type, spawn) {
-  const spawns = this.getProductionFacilities();
-  let r;
-  let name = Game.time + Math.round(Math.random() * 100);
-  r = spawns[0].spawnCreep(BodyParts, name);
-  Memory.communes[this.comName].creeps[name] = {};
-  return r
+
+BuroOfProduction.prototype.getBody = function (spawn) {
+  let type = {
+    'work': ['harvest'],
+    'move': ['road', 'fast'],
+    'carry': ['short']
+  };
+  const roomEnergy = spawn.room.energyCapacityAvailable;
+  let BodyParts = [];
+  let standardType = [
+    MOVE, WORK, CARRY, MOVE, CARRY, CARRY];
+  while (this.designCosts(BodyParts) <= roomEnergy) {
+    BodyParts = BodyParts.concat(standardType);
+  }
+  while (this.designCosts(BodyParts) > roomEnergy) {
+    BodyParts.pop();
+  }
+  if (BodyParts[BodyParts.length - 1] === MOVE)
+    BodyParts.pop();
+
+  return BodyParts
 };
 
 

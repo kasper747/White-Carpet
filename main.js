@@ -38,8 +38,6 @@ console.log(JSON.stringify(commune.creeps));
 let CreepsBuro = new BuroOfProduction(commune);
 CreepsBuro.getProductionFacilities();
 
-r = CreepsBuro.produceCreep([MOVE, WORK, CARRY]);
-console.log('Production', JSON.stringify(r));
 
 
 let HarvestBuro = new BuroOfHarvest('r');
@@ -51,10 +49,11 @@ module.exports.loop = function () {
   committee.transferAssets(Game.creeps);
   committee.transferAssets(Game.spawns);
   r = CreepsBuro.clearDestroyedCreeps();
-  console.log('Removing Creeps:', JSON.stringify(r));
+  //console.log('Removing Creeps:', JSON.stringify(r));
   HarvestBuro.AssignePermaHarvest();
+  console.log('Need more Creeps',HarvestBuro.needMoreCreeps);
   if (HarvestBuro.needMoreCreeps)
-    CreepsBuro.produceCreep([MOVE,  WORK, CARRY, MOVE,]);
+    CreepsBuro.produceCreep();
 
 
   let body_parts = [ //5 |250

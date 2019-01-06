@@ -37,8 +37,8 @@ BuroOfHarvest.prototype.AssignePermaHarvest = function () {
   let freeCreeps = _.filter(this.creeps, function (o) {
     return !o.task
   });
-  console.log('Mining Creeps', JSON.stringify(miningCreeps));
-  console.log('Free Creeps', JSON.stringify(freeCreeps));
+  //console.log('Mining Creeps', JSON.stringify(miningCreeps));
+  //console.log('Free Creeps', JSON.stringify(freeCreeps));
   this.needMoreCreeps = false;
   for (let SourceId in this.sources) {
     let StorageID = 'c673e1f26e7efd3';
@@ -61,9 +61,9 @@ BuroOfHarvest.prototype.AssignePermaHarvest = function () {
       let centTimeWorking = timeToMine / (timeToGo + timeToMine);
       workBeingDone += creep.getActiveBodyparts(WORK) * 2 * centTimeWorking;
       numberOrCreepsWorking += 1 * centTimeWorking;
-      console.log('timeToMine:', timeToMine, work, '/', carry);
-      console.log('timeToGo:', timeToGo, '');
-      console.log('cent Time Working:', centTimeWorking, '')
+      //console.log('timeToMine:', timeToMine, work, '/', carry);
+      //console.log('timeToGo:', timeToGo, '');
+      //console.log('cent Time Working:', centTimeWorking, '')
     }
     if (workBeingDone < 10 && numberOrCreepsWorking <= freeSlots) {
       if (freeCreeps.length === 0) {
