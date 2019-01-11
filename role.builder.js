@@ -319,6 +319,7 @@ let roleBuilder = {
               creep.moveTo(target);
             }
           } else if (workType === 'retreat') {
+              delete Memory.communes.r.creeps[creep.name].task;
             creep.moveTo(target);
 
           }

@@ -58,14 +58,13 @@ BuroOfConstruction.prototype.AssignJobs = function () {
     let creepsInThisRoom = this.getBurosCreeps(room);
     let totalWork = 0;
     for (let idx in  creepsInThisRoom) {
-      console.log('Creeps',JSON.stringify(creepsInThisRoom[idx]));
-      totalWork += Game.creeps[creepsInThisRoom[idx].name].getActiveBodyparts(WORK).length * 5;
+      //console.log('Creeps',JSON.stringify(creepsInThisRoom[idx]));
+      totalWork += Game.creeps[creepsInThisRoom[idx].name].getActiveBodyparts(WORK) * 5;
 
     }
-    console.log('ConstructionBuro Creeps in Room:', room, creepsInThisRoom);
-    if (roomWithJobs[room]/totalWork < 200) {
-      console.log('Creeps working:', JSON.stringify(creepsInThisRoom));
-      break;
+    console.log('ConstructionBuro Creeps in Room:', room, 'Workforce:',totalWork,'Room Jobs:', roomWithJobs[room]);
+    if (roomWithJobs[room]/totalWork<500) {
+            break;
     }
     else {
       freeCreeps = this.getFreeCreeps(room);
@@ -118,7 +117,8 @@ BuroOfConstruction.prototype.placeImportantRoads = function (pos1 = 'eee50774086
   const controllers = _.filter(Memory.communes.r.structures, function (o) {
     return Game.getObjectById(o.id)
         && (Game.getObjectById(o.id).structureType === STRUCTURE_CONTROLLER
-            || Game.getObjectById(o.id).structureType === STRUCTURE_TOWER);
+            || Game.getObjectById(o.id).structureType === STRUCTURE_TOWER
+            || Game.getObjectById(o.id).structureType === STRUCTURE_EXTENSION );
   });
   SourceStructures = SourceStructures.concat(controllers);
   console.log(JSON.stringify(controllers));
