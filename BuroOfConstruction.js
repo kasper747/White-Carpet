@@ -138,8 +138,43 @@ BuroOfConstruction.prototype.placeImportantRoads = function (pos1 = 'eee50774086
         plainCost: 3,
         swampCost: 3,
         ignoreCreeps: true,
-        ignoreDestructibleStructures: false,
-        ignoreRoads: false,
+        
+        roomCallback: function(roomName) {
+
+        let room = Game.rooms[roomName];
+        // In this example `room` will always exist, but since 
+        // PathFinder supports searches which span multiple rooms 
+        // you should be careful!
+        if (!room) return;
+        let costs = new PathFinder.CostMatrix;
+
+        room.find(FIND_STRUCTURES).forEach(function(struct) {
+          if (struct.structureType === STRUCTURE_ROAD) {
+            // Favor roads over plain tiles
+            costs.set(struct.pos.x, struct.pos.y, 1);
+          } else if (struct.structureType !== STRUCTURE_CONTAINER &&
+                     (struct.structureType !== STRUCTURE_RAMPART ||
+                      !struct.my)) {
+            // Can't walk through non-walkable buildings
+            costs.set(struct.pos.x, struct.pos.y, 0xff);
+          }
+        });
+        room.find(FIND_CONSTRUCTION_SITES).forEach(function(struct) {
+          if (struct.structureType === STRUCTURE_ROAD) {
+            // Favor roads over plain tiles
+            costs.set(struct.pos.x, struct.pos.y, 1);
+          } else if (struct.structureType !== STRUCTURE_CONTAINER &&
+                     (struct.structureType !== STRUCTURE_RAMPART ||
+                      !struct.my)) {
+            // Can't walk through non-walkable buildings
+            costs.set(struct.pos.x, struct.pos.y, 0xff);
+          }
+        });
+
+
+        return costs;
+      },
+        
       });
       let path = r.path;
       for (let idx in path) {
