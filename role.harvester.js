@@ -135,7 +135,7 @@ var roleHarvester = {
       GetClosestEnergyPickUp: function (ObjectInRoom) {
         let target;
 
-        target = ObjectInRoom.pos.findInRange(FIND_STRUCTURES, 6, {
+        target = ObjectInRoom.pos.findInRange(FIND_STRUCTURES, 20, {
           filter: (structure) => {
             return structure.structureType === STRUCTURE_STORAGE
           }
@@ -221,10 +221,8 @@ let tomb = creep.pos.findInRange(FIND_TOMBSTONES,6, {
         }
         // dropOff
         else if (creep.memory.taskStep === 'dropOff') {
-          let target = Game.getObjectById(ComCreep.storage);
-          if (!target) {
-            target = Memory.map['shard3'][ComCreep.storage];
-          }
+          let target = this.GetClosestEnergyDropOffArray(creep)[0];
+          
           let targetPos = new RoomPosition(Number(target.pos.x), Number(target.pos.y), target.pos.roomName);
 
           let r = creep.transfer(target, RESOURCE_ENERGY);
