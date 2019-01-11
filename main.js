@@ -96,7 +96,17 @@ let ProgressBuro = new BuroOfProgress('r');
     //
 
   }
-  ;
+  for (let roomName in Game.rooms){
+      let towers = Game.rooms[roomName].find(FIND_STRUCTURES, {
+    filter: (structure) => {
+      return structure.structureType === STRUCTURE_TOWER;
+    }
+  });
+  for (let tower in towers) {
+    roleTower.run(towers[tower]);
+  }
+  }
+  
 }
 
 //}
