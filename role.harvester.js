@@ -75,7 +75,17 @@ var roleHarvester = {
           if (target === undefined) target = null;
           //console.log(ObjectInRoom.name,'Got Container as drop off',target);
         }
-        if ( !target) {
+        if (!target ) {
+          target = ObjectInRoom.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: (structure) => {
+              return this.STRUCTURE_ENERGY_DROP_OF.includes(structure.structureType)
+                  && structure.energy < structure.energyCapacity && (
+                      structure.structureType !== STRUCTURE_TOWER
+                      || structure.energyCapacity - structure.energy > structure.energyCapacity*0.8);
+            }
+          });
+        }
+        if ( !target && ObjectInRoom.task !== 'collect') {
           //console.log(ObjectInRoom.name,'Looking for drop off');
           target = ObjectInRoom.pos.findInRange(FIND_STRUCTURES,2, {
             filter: (structure) => {
