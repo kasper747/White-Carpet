@@ -16,10 +16,11 @@ let roleMiner = require('role.miner');
 let util = require('util');
 let roleLorry = {
   // a function to run the logic for this role
-  run: function (creep) {
-
+  run: function (ComCreep) {
+          
+        let creep = Game.creeps[ComCreep.name];
     // if creep is bringing energy to a structure but has no energy left
-    if (creep.memory.task === 'transfer' && creep.carry.energy === 0) {
+    if ( creep.carry.energy === 0) {
       // switch state
 
       creep.memory.task = 'collect';
@@ -27,26 +28,60 @@ let roleLorry = {
 
     }
     // if creep is harvesting energy but is full
-    else if (creep.memory.task === 'collect' && creep.carry.energy >= creep.carryCapacity / 2) {
-      // switch state
-
+    else if ( creep.carry.energy >= creep.carryCapacity / 2 
+        || creep.memory.task === undefined
+    ) {
       creep.memory.task = 'transfer';
 
     }
-    else if (creep.memory.task === undefined) {
 
-      // In case of initiation or to abort the setting before
-      creep.memory.task = 'transfer';
-
-    }
 
 
     // if creep is supposed to transfer energy to a structure
     if (creep.memory.task === 'transfer') {
       // find closest spawn, extension or tower which is not full
-      let structure = roleHarvester.GetClosestEnergyDropOffArray(creep)[0];
+       
+        
+        let target ;
+        if (ComCreep.targetContainer){
+            target = Game.getObjectById(ComCreep.targetContainer);
+            creep.memory.targetType = target ? 'permaTarget' : undefined;
+        }
+        
+        if (!target ) {
+          target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: (structure) => {
+              return [STRUCTURE_SPAWN,STRUCTURE_EXTENSION].includes(structure.structureType)
+                  && structure.energy < structure.energyCapacity || (
+                      structure.structureType === STRUCTURE_TOWER
+                      && structure.energyCapacity - structure.energy > this.MIN_ENERGY_TOWER_REFILL
+                      && structure.energy < structure.energyCapacity);
+            }
+          });
+        }
+        
+        if (!target ) {
+          target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: (structure) => {
+              return [STRUCTURE_SPAWN,STRUCTURE_EXTENSION].includes(structure.structureType)
+                  && structure.energy < structure.energyCapacity || (
+                      structure.structureType === STRUCTURE_TOWER
+                      && structure.energyCapacity - structure.energy > this.MIN_ENERGY_TOWER_REFILL
+                      && structure.energy < structure.energyCapacity);
+            }
+          });
+        }
+        // If no source found drop at the storage
+        if (target === undefined || target === null) {
+          target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: (structure) => {
+              return [STRUCTURE_STORAGE].includes(structure.structureType) 
+              && structure.store.energy < structure.storeCapacity
+            }
+          });
+        }
       // if we found one
-      if (structure !== undefined) {
+      if (target ) {
         // try to transfer energy to the creeps nearby
         if (!Memory.NeedEnergyToProcreate) {
           let creeps = creep.pos.findInRange(FIND_CREEPS, 1, {
@@ -64,9 +99,11 @@ let roleLorry = {
         }
 
         // try to transfer energy, if it is not in range
-        if (creep.transfer(structure, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+        creep.memory.target = target.id;
+        if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
           // move towards it
-          util.movingTo(creep, structure);
+          creep.moveTo(target);
+          creep.transfer(target, RESOURCE_ENERGY);
         }
       }
     }
@@ -89,71 +126,6 @@ let roleLorry = {
 
 
       // find closest target
-      /*
-      try {
-
-        if (Memory.containers === undefined){
-          Memory.containers = {}
-        }
-        for (let roomName in Object.keys(Game.rooms)) {
-          let containers = Game.rooms[roomName].find(FIND_STRUCTURES, {
-            filter: s => s.structureType === STRUCTURE_CONTAINER
-                //&& s.store[RESOURCE_ENERGY] > 500
-          })
-          for (let idx in containers){
-            if (containers[idx].id in Memory.containers === false){
-              Memory.containers[containers[idx].id] = 0;
-            }
-          }
-
-
-        }
-
-      } catch (e) {
-
-      }
-       */
-      try {
-        //LORRIES
-        if (creep.target === undefined) {
-          let lorries = _.find(FIND_MY_CREEPS, {
-            filter: s => s.memory.role === 'lorry'
-                && s.memory.role !== undefined
-          });
-          //Defininf ROOMS
-          loop :{
-            for (let roomName in Object.keys(Game.rooms)) {
-              // CONTAINERS
-              let containers = Game.rooms[roomName].find(FIND_STRUCTURES, {
-                filter: s => s.structureType === STRUCTURE_CONTAINER
-                    && s.store[RESOURCE_ENERGY] > 500
-              });
-              let freeContainer;
-
-              for (let idx in containers) {
-                freeContainer = containers[idx].id;
-                for (let idx2 in lorries) {
-                  if (lorries[idx2].memory.target === containers[idx]) {
-                    freeContainer = undefined;
-                    // next container
-                    break
-                  }
-                }
-                if (freeContainer !== undefined) {
-                  creep.memory.target = freeContainer;
-                  break loop
-                }
-
-              }
-
-            }
-          }
-
-        }
-
-      } catch (e) {
-
-      }
       let target = null;
 
       if (target === null) {
@@ -170,7 +142,6 @@ let roleLorry = {
       if (target === null) {
         target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
           filter: s => s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.carryCapacity / 2
-
         });
       }
       if (target === null) {
@@ -181,18 +152,19 @@ let roleLorry = {
                 && structure.store[RESOURCE_ENERGY] > 200
           }
         });
-
       }
       // if one was found
-      if (target !== undefined || target !== null) {
+      if (target) {
         // try to withdraw energy, if the target is not in range
+        
         if (creep.withdraw(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
           // move towards it
-          util.movingTo(creep, target);
+          creep.moveTo(target);
         }
       }
       // Waiting and BackOff
       else {
+          console.log(creep.name, ComCreep.task,'Cant move')
         util.moveBack(creep);
       }
     }

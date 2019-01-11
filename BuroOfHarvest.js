@@ -29,6 +29,50 @@ BuroOfHarvest.prototype.produceCreep = function (BodyParts) {
   return r
 };
 
+BuroOfHarvest.prototype.orderLorry = function () {
+    let needLorry = false;
+    let roomNameWithoutLorries;
+    let param ={};
+    for (let roomName in Game.rooms){
+        let fullStores = Game.rooms[roomName].find(FIND_STRUCTURES, {
+              filter: (s) => {
+                return [STRUCTURE_CONTAINER].includes(s.structureType)
+                && s.store.energy > s.storeCapacity*0.9
+              }
+        });
+        let container = Game.rooms[roomName].find(FIND_STRUCTURES, {
+              filter: (s) => {
+                return [STRUCTURE_CONTAINER].includes(s.structureType)
+                
+              }
+        });
+        //Check, what storage is still have no lorries
+        if (container){
+        for (let idx in container){
+            let containerID = container[idx].id;
+            let containerLorries = _.find(Memory.communes.r.creeps,
+                function(o) { return o.targetContainer === containerID; })
+            if (!containerLorries) {
+                param['storageRoom'] = roomName;
+                param['targetContainer'] = containerID;
+                param['task'] = 'lorry';
+                break;
+            }
+        }}
+        let lorryCreeps = _.filter(this.creeps, function (o) {
+            return o.task === 'lorry' && o.target === roomName;
+        });
+        console.log('Lorry analysis:','L',lorryCreeps.length,'S',fullStores.length)
+        if (lorryCreeps.length < fullStores.length && !param['storageRoom'] ){
+            param['storageRoom'] = roomName;
+            param['task'] = 'lorry';
+            break;
+        }
+    }
+
+    return param
+}
+
 
 BuroOfHarvest.prototype.AssignePermaHarvest = function () {
   let miningCreeps = _.filter(this.creeps, function (o) {
@@ -61,22 +105,33 @@ BuroOfHarvest.prototype.AssignePermaHarvest = function () {
     });
 
 
-    let workBeingDone = 0;
+    let energyHarvested = 0;
+    let energyTransported = 0;
+    // Collecting info on the work force
     for (let idx in CreepsAtSource) {
+        
       let creep = Game.creeps[CreepsAtSource[idx].name];
       let work = creep.getActiveBodyparts(WORK);
       let carry = creep.getActiveBodyparts(CARRY);
+      if (container){
+          if (container && CreepsAtSource[idx].task ==='lorry'){
+              energyTransported += carry*50/distance/2;
+          }
+            
+      } 
       let timeToMine = carry * 50 / (work * 2);
       let timeToGo = distance * 2;
       let centTimeWorking = timeToMine / (timeToGo + timeToMine);
-      workBeingDone += creep.getActiveBodyparts(WORK) * 2 * centTimeWorking;
+      energyHarvested += creep.getActiveBodyparts(WORK) * 2 * centTimeWorking;
       numberOrCreepsWorking += 1 * centTimeWorking;
       console.log('timeToMine:', timeToMine, work, '/', carry);
       console.log('timeToGo:', timeToGo, '');
       console.log('cent Time Working:', centTimeWorking, '')
     }
-    console.log('workBeingDone:',workBeingDone, 'numberOrCreepsWorking',numberOrCreepsWorking)
-    if (workBeingDone < 10 && numberOrCreepsWorking <= freeSlots) {
+    console.log(SourceId,'energyHarvested:',energyHarvested, 'numberOrCreepsWorking',numberOrCreepsWorking)
+    
+    // Analysing workforce
+    if (energyHarvested < 10 && numberOrCreepsWorking <= freeSlots) {
       if (freeCreeps.length === 0) {
         this.needMoreCreeps = true;
         break
@@ -93,9 +148,9 @@ BuroOfHarvest.prototype.AssignePermaHarvest = function () {
         
             // Building container
             if ( Game.rooms[sourcePos.roomName]&&
-            Game.rooms[sourcePos.roomName].controller.my === true){
-                let creepMiner = sourcePos.findInRange(FIND_MY_CREEPS, 1)[0];
-                if (creepMiner){
+                Game.rooms[sourcePos.roomName].controller.my === true){
+                    let creepMiner = sourcePos.findInRange(FIND_MY_CREEPS, 1)[0];
+                    if (creepMiner){
                         creepMiner.room.createConstructionSite(creepMiner.pos,STRUCTURE_CONTAINER);
                     }
                 }

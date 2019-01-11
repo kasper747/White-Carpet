@@ -21,6 +21,7 @@ let roleHarvester = require('role.harvester');
 let roleBuilder = require('role.builder');
 let roleUpgrader = require('role.upgrader');
 let roleTower = require('role.tower');
+let roleLorry = require('role.lorry');
 
 
 
@@ -70,9 +71,15 @@ let ProgressBuro = new BuroOfProgress('r');
     HarvestBuro.AssignePermaHarvest();
     ConstructionBuro.AssignJobs();
     ProgressBuro.AssignJobs();
+    
+    console.log(r);
   }
-  
-  if (HarvestBuro.needMoreCreeps || ConstructionBuro.needMoreCreeps || ProgressBuro.needMoreCreeps)
+  /*
+   r = HarvestBuro.orderLorry();
+    if (r.task ==='lorry'){
+        CreepsBuro.produceCreep([],r);
+    }*/
+   if (HarvestBuro.needMoreCreeps || ConstructionBuro.needMoreCreeps || ProgressBuro.needMoreCreeps)
     CreepsBuro.produceCreep();
 
 
@@ -92,6 +99,9 @@ let ProgressBuro = new BuroOfProgress('r');
     }
     else if (creep.task === 'progress') {
       roleUpgrader.run(creep);
+    }
+    else if (creep.task === 'lorry') {
+      roleLorry.run(creep);
     }
     //
 

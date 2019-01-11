@@ -56,15 +56,19 @@ BuroOfProduction.prototype.getProductionFacilities = function () {
  * @param {Array} BodyParts
  * @returns {*}
  */
-BuroOfProduction.prototype.produceCreep = function (BodyParts = []) {
+BuroOfProduction.prototype.produceCreep = function (BodyParts = [],param) {
   const spawns = this.getProductionFacilities();
   const productionFacility = spawns[0];
   let r;
   let name = 'Creep' + Game.time + Math.round(Math.random() * 100);
-  if (BodyParts.length === 0)
+  if (param && param['task'] === 'lorry'){
+     BodyParts =  [MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,];
+  }
+  else if (BodyParts.length === 0)
     BodyParts = this.getBody(spawns[0]);
   r = productionFacility.spawnCreep(BodyParts, name);
   if (r === OK) {
+      let param = 
     Memory.communes[this.comName].creeps[name] = {
       'manufactured': {
         'productionDate': Game.time,
@@ -73,7 +77,14 @@ BuroOfProduction.prototype.produceCreep = function (BodyParts = []) {
       },
       'name': name,
     };
+    if (param['task']  === 'lorry'){
+         Memory.communes[this.comName].creeps[name].manufactured.type = param['task'];
+         Memory.communes[this.comName].creeps[name].task = param['task'] ;
+         Memory.communes[this.comName].creeps[name].storageRoom = param['storageRoom'] ;
+          Memory.communes[this.comName].creeps[name].targetContainer = param['targetContainer'] ;
+    }
     console.log('Final Design.', 'Name', name, 'Costs', this.designCosts(BodyParts), 'Body', JSON.stringify(BodyParts));
+    
   }
   if ([ERR_BUSY].includes(r)) {
 
