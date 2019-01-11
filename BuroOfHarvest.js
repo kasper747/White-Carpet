@@ -41,7 +41,16 @@ BuroOfHarvest.prototype.AssignePermaHarvest = function () {
   //console.log('Free Creeps', JSON.stringify(freeCreeps));
   this.needMoreCreeps = false;
   for (let SourceId in this.sources) {
-    let StorageID = 'c673e1f26e7efd3';
+      let SourceShade = Memory.map.shard3[SourceId];
+        
+        let sourcePos = new RoomPosition(SourceShade.pos.x, SourceShade.pos.y,SourceShade.pos.roomName);
+      let container = sourcePos.findInRange(FIND_STRUCTURES, 1, {
+              filter: (s) => {
+                return s.structureType === STRUCTURE_CONTAINER;
+              }
+            }
+        )[0] ;
+    let StorageID = '5c218697bb207f79fa7c8a2a';
     let source = this.sources[SourceId];
     let freeSlots = Memory.map.shard3[SourceId].access.length;
     let numberOrCreepsWorking = 0;
@@ -61,10 +70,11 @@ BuroOfHarvest.prototype.AssignePermaHarvest = function () {
       let centTimeWorking = timeToMine / (timeToGo + timeToMine);
       workBeingDone += creep.getActiveBodyparts(WORK) * 2 * centTimeWorking;
       numberOrCreepsWorking += 1 * centTimeWorking;
-      //console.log('timeToMine:', timeToMine, work, '/', carry);
-      //console.log('timeToGo:', timeToGo, '');
-      //console.log('cent Time Working:', centTimeWorking, '')
+      console.log('timeToMine:', timeToMine, work, '/', carry);
+      console.log('timeToGo:', timeToGo, '');
+      console.log('cent Time Working:', centTimeWorking, '')
     }
+    console.log('workBeingDone:',workBeingDone, 'numberOrCreepsWorking',numberOrCreepsWorking)
     if (workBeingDone < 10 && numberOrCreepsWorking <= freeSlots) {
       if (freeCreeps.length === 0) {
         this.needMoreCreeps = true;
@@ -75,9 +85,24 @@ BuroOfHarvest.prototype.AssignePermaHarvest = function () {
       this.creeps[freeCreeps[freeCreeps.length - 1].name].target = SourceId;
       this.creeps[freeCreeps[freeCreeps.length - 1].name].storage = StorageID;
       freeCreeps.pop();
+    } 
+    // THIS source reached the next stage
+    else{
+        if (container) break; // Already have container
+        
+        // Building container
+        if ( Game.rooms[sourcePos.roomName]&&
+            Game.rooms[sourcePos.roomName].controller.my === true){
+                let creepMiner = sourcePos.findInRange(FIND_MY_CREEPS, 1)[0];
+                if (creepMiner){
+                    creepMiner.room.createConstructionSite(creepMiner.pos,STRUCTURE_CONTAINER);
+                }
+            }
+        
     }
 
   }
+  console.log('Buro of Harvest. Need more Jobs:', this.needMoreCreeps);
 };
 
 module.exports = BuroOfHarvest;
