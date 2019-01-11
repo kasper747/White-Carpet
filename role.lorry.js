@@ -72,16 +72,16 @@ let roleLorry = {
     }
     // if creep is supposed to get energy
     else if (creep.memory.task === 'collect') {
-      let tomb = creep.pos.findClosestByRange(FIND_TOMBSTONES, {
+      let tomb = creep.pos.findInRange(FIND_TOMBSTONES,4, {
         filter: (structure) => {
           return structure.store[RESOURCE_ENERGY] > 10
         }
       });
-      if (tomb !== null) {
+      if (tomb) {
         let r = creep.withdraw(tomb, RESOURCE_ENERGY);
 
         if (r === ERR_NOT_IN_RANGE) {
-          util.movingTo(creep, tomb);
+          creep.moveTo( tomb);
           return
         }
 

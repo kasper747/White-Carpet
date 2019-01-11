@@ -273,6 +273,21 @@ let roleBuilder = {
       ,
       run: function (ComCreep) {
         let creep = Game.creeps[ComCreep.name];
+        let tomb = creep.pos.findInRange(FIND_TOMBSTONES,4, {
+        filter: (structure) => {
+          return structure.store[RESOURCE_ENERGY] > 10
+        }
+      });
+      if (tomb) {
+        let r = creep.withdraw(tomb, RESOURCE_ENERGY);
+
+        if (r === ERR_NOT_IN_RANGE) {
+          creep.moveTo( tomb);
+          return
+        }
+
+      }
+
         let allawedToGetEnergy = true;
         // Builder Initiation
 

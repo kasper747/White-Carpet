@@ -160,8 +160,23 @@ var roleHarvester = {
       /** @param {Creep} creep **/
       ContainerHarvesting: true,
       run: function (ComCreep) {
+          
         let creep = Game.creeps[ComCreep.name];
 
+let tomb = creep.pos.findInRange(FIND_TOMBSTONES,6, {
+        filter: (structure) => {
+          return structure.store[RESOURCE_ENERGY] > 10
+        }
+      })[0];
+      if (tomb) {
+        let r = creep.withdraw(tomb, RESOURCE_ENERGY);
+
+        if (r === ERR_NOT_IN_RANGE && creep.carry.energy < creep.carryCapacity) {
+          creep.moveTo( tomb);
+          return
+        }
+
+      }
 
         // Harvesting
         /**
