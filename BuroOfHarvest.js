@@ -41,6 +41,7 @@ BuroOfHarvest.prototype.AssignePermaHarvest = function () {
   //console.log('Free Creeps', JSON.stringify(freeCreeps));
   this.needMoreCreeps = false;
   for (let SourceId in this.sources) {
+      console.log('Source ID',SourceId);
       let SourceShade = Memory.map.shard3[SourceId];
         
         let sourcePos = new RoomPosition(SourceShade.pos.x, SourceShade.pos.y,SourceShade.pos.roomName);
@@ -52,7 +53,7 @@ BuroOfHarvest.prototype.AssignePermaHarvest = function () {
         )[0] ;
     let StorageID = '5c218697bb207f79fa7c8a2a';
     let source = this.sources[SourceId];
-    let freeSlots = Memory.map.shard3[SourceId].access.length;
+    let freeSlots = SourceShade.access.length;
     let numberOrCreepsWorking = 0;
     let distance = CartographyBuro.getDistance(StorageID, SourceId);
     let CreepsAtSource = _.filter(miningCreeps, function (o) {
@@ -88,17 +89,17 @@ BuroOfHarvest.prototype.AssignePermaHarvest = function () {
     } 
     // THIS source reached the next stage
     else{
-        if (container) break; // Already have container
+        if (!container) { // Already have container
         
-        // Building container
-        if ( Game.rooms[sourcePos.roomName]&&
+            // Building container
+            if ( Game.rooms[sourcePos.roomName]&&
             Game.rooms[sourcePos.roomName].controller.my === true){
                 let creepMiner = sourcePos.findInRange(FIND_MY_CREEPS, 1)[0];
                 if (creepMiner){
-                    creepMiner.room.createConstructionSite(creepMiner.pos,STRUCTURE_CONTAINER);
+                        creepMiner.room.createConstructionSite(creepMiner.pos,STRUCTURE_CONTAINER);
+                    }
                 }
-            }
-        
+        }
     }
 
   }

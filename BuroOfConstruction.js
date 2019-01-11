@@ -63,7 +63,7 @@ BuroOfConstruction.prototype.AssignJobs = function () {
 
     }
     console.log('ConstructionBuro Creeps in Room:', room, 'Workforce:',totalWork,'Room Jobs:', roomWithJobs[room]);
-    if (roomWithJobs[room]/totalWork<500) {
+    if (roomWithJobs[room]/totalWork<700) {
             break;
     }
     else {

@@ -9,14 +9,16 @@ let roleUpgrader = {
     let creep = Game.creeps[ComCreep.name];
     let AllowedToSpendEnergy = true;
     //Switching to Upgrading
-    if (creep.carry.energy === creep.carryCapacity && creep.memory.upgrading === false) {
-      creep.memory.upgrading = true;
+    if (creep.carry.energy === creep.carryCapacity ) {
+      creep.memory.task = 'progress';
     }
     //Switching to Harvesting
-    else if (creep.carry.energy === 0 && creep.memory.upgrading !== false) {
-      creep.memory.upgrading = false;
+    else if (creep.carry.energy === 0 || !creep.memory.task) {
+      creep.memory.task = 'collect';
     }
-    if (creep.memory.upgrading) {
+    
+    
+    if (creep.memory.task === 'progress') {
 
       let target = Game.getObjectById(ComCreep.target);
       if (!target) {
@@ -25,14 +27,12 @@ let roleUpgrader = {
       let targetPos = new RoomPosition(Number(target.pos.x), Number(target.pos.y), target.pos.roomName);
 
       ComCreep.target;
-      creep.memory.task = 'upgrade';
-
       creep.moveTo(targetPos);
       creep.upgradeController(creep.room.controller);
 
     }
-    else {
-      creep.memory.task = 'withdraw';
+    else if (creep.memory.task = 'collect') {
+      
       //Check if can pick up energy
       if (AllowedToSpendEnergy) {
         let target = harvester.GetClosestEnergyPickUp(creep)[0];
