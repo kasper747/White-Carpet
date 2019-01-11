@@ -64,7 +64,7 @@ var roleHarvester = {
         /*
         LINK
          */
-        if (ObjectInRoom.memory.role === 'longDistanceHarvester' && target === null) {
+        if (ObjectInRoom.memory.role === 'longDistanceHarvester' && !target) {
           //console.log(ObjectInRoom.name,'Looking for drop off');
           target = ObjectInRoom.pos.findInRange(FIND_STRUCTURES, 3, {
             filter: (s) => {
@@ -75,19 +75,19 @@ var roleHarvester = {
           if (target === undefined) target = null;
           //console.log(ObjectInRoom.name,'Got Container as drop off',target);
         }
-        if (ObjectInRoom.memory.role === 'longDistanceHarvester' && target === null) {
+        if ( !target) {
           //console.log(ObjectInRoom.name,'Looking for drop off');
-          target = ObjectInRoom.pos.findClosestByRange(FIND_STRUCTURES, {
+          target = ObjectInRoom.pos.findInRange(FIND_STRUCTURES,2, {
             filter: (structure) => {
               return (STRUCTURE_CONTAINER === structure.structureType
                   || STRUCTURE_STORAGE === structure.structureType)
                   && _.sum(structure.store) + 400 < structure.storeCapacity
             }
-          });
+          })[0];
           //console.log(ObjectInRoom.name,'Got Container as drop off',target);
         }
 
-        if (target === undefined || target === null) {
+        if (!target ) {
           target = ObjectInRoom.pos.findClosestByRange(FIND_STRUCTURES, {
             filter: (structure) => {
               return this.STRUCTURE_ENERGY_DROP_OF.includes(structure.structureType)
