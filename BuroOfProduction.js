@@ -101,10 +101,10 @@ BuroOfProduction.prototype.getBody = function (spawn) {
     'move': ['road', 'fast'],
     'carry': ['short']
   };
-  const roomEnergy = spawn.room.energyCapacityAvailable;
+  const roomEnergy = 1200;//spawn.room.energyCapacityAvailable;
   let BodyParts = [];
   let standardType = [
-    MOVE, WORK, CARRY, MOVE, CARRY, CARRY];
+    MOVE, WORK, CARRY, MOVE, WORK, CARRY];
   while (this.designCosts(BodyParts) <= roomEnergy) {
     BodyParts = BodyParts.concat(standardType);
   }
